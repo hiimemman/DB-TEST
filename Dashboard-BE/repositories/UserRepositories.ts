@@ -44,8 +44,9 @@ class UserRepository{
     }
 
     async updateUserByID(id : string, data : IUser){
-       
+      
         try{
+           
             return await UserModel.findByIdAndUpdate(id, data, {new: true});
         }catch(e){
             console.error("Repository error: ",e)

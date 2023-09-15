@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useNavigate } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -13,7 +13,7 @@ export function Login() : JSX.Element{
 
     
 
-    async function handleSubmit(event : any){
+    async function handleSubmit(event :  React.FormEvent<HTMLFormElement>){
         event.preventDefault()
         try{
             console.log(email)
@@ -21,7 +21,7 @@ export function Login() : JSX.Element{
             
             const data = {"email" : email, "hashed_password" : password}
     
-            const request = await fetch("http://localhost:3000/login",{
+            const request = await fetch("http://localhost:3000/api/login",{
                 method: 'POST',
                 headers: { 'Content-Type' : 'application/json'},
                 body: JSON.stringify(data),
@@ -30,8 +30,8 @@ export function Login() : JSX.Element{
             const response = await request.json();
             console.log("Response : ",response)
             if(response.responseStatus === 200){
-                // navigate('/dashboard')
-                Test();
+                 navigate('/dashboard')
+                //Test();
             }else{
                 toast("Wrong Email or Password")
             }
@@ -43,23 +43,12 @@ export function Login() : JSX.Element{
 
     }
 
-    async function Test(){
-        const request = await fetch('http://localhost:3000/user'
-        ,{
-            method: 'GET', // or other HTTP methods
-            credentials: 'include', // Include cookies
-        })
-
-        const response = await request.json();
-
-        console.log(response)
-    }
-
-    const handleChangeEmail = (event : any ) =>{
+   
+    const handleChangeEmail = (event :  React.ChangeEvent<HTMLInputElement> ) =>{
         setEmail(event.target.value);
     }
     
-    const handleChangePassword = (event : any )=>{
+    const handleChangePassword = (event :  React.ChangeEvent<HTMLInputElement> )=>{
         setPassword(event.target.value);
     }
     return(

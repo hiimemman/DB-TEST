@@ -145,7 +145,7 @@ export async function GetUserById(request: Request, response : Response){
 
 }
 
-export async function UpdateUserById(request : Request, response: Response){
+export async function UpdateUserByIdBody( request: Request, response: Response) {
 
     let responseData : IResponseMessage ={
         responseContent: "User: "+request.body.fullname+" information has been updated",
@@ -156,6 +156,41 @@ export async function UpdateUserById(request : Request, response: Response){
 
     try{
 
+        const updateUserById = await UserService.UpdateUserById(request.body.id, request.body)
+
+        if(updateUserById === false){
+            responseData = {
+                responseContent: "User failed to update",
+                responseStatus: 201,
+                responseDateTime:  GetCurrentDateSTR(),
+        
+            }
+        }
+
+        response.json(responseData);
+    }catch(e){
+
+        const responseData : IResponseMessage = {
+            responseContent: e,
+            responseStatus: 500,
+            responseDateTime:  GetCurrentDateSTR(),
+        }
+        response.json(responseData);
+
+    }
+
+}
+
+export async function UpdateUserById(request : Request, response: Response){
+
+    let responseData : IResponseMessage ={
+        responseContent: "User: "+request.body.fullname+" information has been updated",
+        responseStatus: 200,
+        responseDateTime:  GetCurrentDateSTR(),
+
+    }
+
+    try{
         const updateUserById = await UserService.UpdateUserById(request.params.id, request.body)
 
         if(updateUserById === false){

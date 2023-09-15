@@ -31,13 +31,13 @@ export async function Authentication( request: Request, response: Response){
         if(authUser === true){
             const token = request.body.email;
             console.log(token)
-        response.cookie('email',token, {
+           response.cookie('authToken',token, {
             httpOnly: true,
             maxAge: 3600000, 
-            // path: '/',
             // sameSite: "none",
             // secure: false,
-            // domain: "http://localhost:3000"
+            path: '/', // Set to '/' to make it accessible from all paths
+            domain: 'localhost', // Set to the appropriate domain
         })
         
         responseData ={
@@ -75,9 +75,9 @@ export async function LogOut(request: Request, response: Response){
 
     try{
 
-    response.clearCookie('email');
+    response.clearCookie('authToken');
 
-    response.json({message: "Succesfully Logout"})
+    response.status(200).json({message: "Succesfully Logout"})
     }catch(e){
         responseData = {
             responseContent: "Error in auth controller: "+e,
