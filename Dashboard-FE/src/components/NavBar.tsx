@@ -4,6 +4,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import  { ReactNode, useEffect } from 'react';
 
+
 interface NavBarProps {
   children: ReactNode;
 }
@@ -21,6 +22,7 @@ export function NavBar({ children } : NavBarProps){
               credentials: 'include', // Include cookies
             })
     
+            
             if(request.status === 401 || request.status ===500){
                 navigate('/login')
             }

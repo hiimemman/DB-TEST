@@ -22,11 +22,13 @@ export function Login() : JSX.Element{
             const data = {"email" : email, "hashed_password" : password}
     
             const request = await fetch("http://localhost:3000/api/login",{
+               credentials: 'include', 
                 method: 'POST',
                 headers: { 'Content-Type' : 'application/json'},
                 body: JSON.stringify(data),
             })
-    
+          
+
             const response = await request.json();
             console.log("Response : ",response)
             if(response.responseStatus === 200){

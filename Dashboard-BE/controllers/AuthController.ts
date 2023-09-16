@@ -30,13 +30,12 @@ export async function Authentication( request: Request, response: Response){
 
         if(authUser === true){
             const token = request.body.email;
-            console.log(token)
            response.cookie('authToken',token, {
             httpOnly: true,
-            maxAge: 3600000, 
-            // sameSite: "none",
-            // secure: false,
-            path: '/', // Set to '/' to make it accessible from all paths
+            maxAge: 3600000,
+            //sameSite: "none", // You can uncomment this if needed
+            secure: false, // Set to false for HTTP in a local environment
+            path: '/',
             domain: 'localhost', // Set to the appropriate domain
         })
         
