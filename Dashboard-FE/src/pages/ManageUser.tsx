@@ -2,6 +2,8 @@ import { NavBar } from "../components/NavBar"
 import {useEffect , useState, FormEvent} from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import  CustomInputField from "../components/InputField";
+import { ValidateComplexEmail } from "../common/EmailValidation";
 
 interface IUser {
     _id: string,
@@ -21,6 +23,10 @@ export default function ManageUser(){
         access_token: null,
     }
 
+    ///////////////////////////////////////////////////////
+    ///// Input Fields default state and variable
+    //////////////////////////////////////////////////////
+
     const [users, setUsers] = useState([]);
 
     const [selectedUser, setSelectedUser]  = useState(initialState);
@@ -39,16 +45,34 @@ export default function ManageUser(){
 
     const [email ,setEmail] = useState('');
 
-    const [fullname, setFullname] = useState('');
-
     const [password, setPassword] = useState('');
 
     const [confirmed_password, setConfirmedPassword] = useState('');
 
+    ///////////////////////////////////////////////
+    //// Error for inputs
+    //////////////////////////////////////////////
+
+    /////ADD NEW MODAL
+
+    //add new fullname error
+    
+    const addNewInitialState = {
+    value: "", 
+    status :"normal",
+    statusMessage: "",}
+
+    const [addNewFullname, setAddNewFullname] = useState(addNewInitialState)
+    const [addNewEmail, setAddNewEmail] = useState(addNewInitialState)
+    const [addNewPassword, setAddNewPassword] = useState(addNewInitialState)
+    const [addNewConfirmPassword, setAddNewConfirmPassword] = useState(addNewInitialState)
+    //////////////////////////////////////////////
+    //// Fetch all user to store in users
+    /////////////////////////////////////////////
     async function GetAllUser(){
         try{
 
-            const request = await fetch('http://localhost:3000/api/user',{
+            const request = await fetch(import.meta.env.VITE_SERVER_URL+'/user',{
                 method: 'GET',
                 credentials: 'include',   
             })
@@ -65,23 +89,17 @@ export default function ManageUser(){
         }
       
     }
-    
-    useEffect(() =>{
+  
 
-        GetAllUser();
-
-        return () =>{
-
-        }
-    },[])
-
-    
+    /////////////////////////////////////
+    /// Functions that handle the modals
+    /////////////////////////////////////
 
     const handleEditModal = (user : IUser) =>{
 
        setSelectedUser(user)
-       setFullname(user.fullname)
-       setEmail(user.email);
+       setUpdatedEmail(user.email)
+       setUpdatedFullname(user.fullname);
     }
 
     const handleDeleteModal = (id : string) =>{
@@ -100,19 +118,23 @@ export default function ManageUser(){
 
     const handleCloseAddUserModal = () =>{
         setIsAddUser(false);
-        setConfirmedPassword('');
-        setEmail('');
-        setFullname('');
-        setPassword('');
+       
+        setAddNewEmail(addNewInitialState)
+        setAddNewFullname(addNewInitialState)
+        setAddNewPassword(addNewInitialState)
+        setAddNewConfirmPassword(addNewInitialState)
     }
 
 
-    const handleSubmitEdit = async () => {
+    const handleSubmitEdit = async (event : FormEvent) => {
+
+      
+        event.preventDefault();
 
         const data = {...selectedUser, fullname: updatedFullname, email: updatedEmail}
         
         try{
-            const request = await fetch('http://localhost:3000/api/user/'+selectedUser._id,{
+            const request = await fetch(import.meta.env.VITE_SERVER_URL+'/user/'+selectedUser._id,{
                 method: 'PUT',
                 headers: {'Content-Type' : 'application/json'},
                 credentials: 'include', 
@@ -121,8 +143,8 @@ export default function ManageUser(){
     
             const response = await request.json();
             
-            console.log(response)
-            if(response.responseContent === 200){
+
+            if(response.responseStatus === 200){
                 GetAllUser();
                 toast(response.responseContent)
                 handleCloseModal();
@@ -138,7 +160,7 @@ export default function ManageUser(){
     const handleSubmitDelete = async () =>{
 
         try{
-            const request = await fetch('http://localhost:3000/api/user/'+deleteUserId,{
+            const request = await fetch(import.meta.env.VITE_SERVER_URL+'/user/'+deleteUserId,{
                 method: 'DELETE',
                 headers: {'Content-Type' : 'application/json'},
                 credentials: 'include', 
@@ -162,10 +184,10 @@ export default function ManageUser(){
 
     const handleSubmitNewUser = async (event : FormEvent<HTMLFormElement>) =>{
         event?.preventDefault();
-
-        try{
-            const data = {"fullname" : fullname, "email": email, "hashed_password" : password}
-            const request = await fetch('http://localhost:3000/api/user', {
+        if(addNewFullname.status !== "error" && addNewEmail.status !== "error" && addNewPassword.status !== "error" && addNewConfirmPassword.status !== "error"){
+          try{
+            const data = {"fullname" : addNewFullname.value, "email": addNewEmail.value, "hashed_password" : addNewPassword.value}
+            const request = await fetch(import.meta.env.VITE_SERVER_URL+'/user', {
                 method: 'POST',
                 headers: {'Content-Type' : 'application/json'},
                 credentials: 'include', 
@@ -186,14 +208,34 @@ export default function ManageUser(){
         }catch(e){
             toast("Error in adding a new user "+ e)
         }
+      }else{
+
+        toast("There was still an error in your input")
+        
+      }
+      
     }
 
-    useEffect(() =>{
+  /////////////////////////////////////////////////////
+  ///////////// LISTENER
+  ////////////////////////////////////////////////////
 
-      console.log(users)
+    
+  useEffect(() =>{
+  
+    GetAllUser();
 
-      return () =>{}
-  },[users, isEdit, isDelete, deleteUserId, isAddUser, email, fullname, password, confirmed_password])
+    return () =>{
+
+    }
+  },[])
+
+  useEffect(() =>{
+ 
+      return () =>{ 
+        console.log(addNewFullname)
+      }
+  },[users, isEdit, isDelete, deleteUserId, isAddUser, email, addNewFullname, password, confirmed_password,selectedUser])
 
 
 
@@ -238,86 +280,106 @@ export default function ManageUser(){
                      </h3>
                      <form className="space-y-6" onSubmit={handleSubmitNewUser} >
                      <div>
-                         <label
-                           htmlFor="fullname"
-                           className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                         >
-                           Full name
-                         </label>
-                         <input
-                           type="text"
-                           name="fullname"
-                           id="fullname"
-                           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500  text-white"
-                           placeholder={"Enter your full name here"}
-                           value ={fullname}
-                           onChange= {(event) => {setFullname(event.target.value)}}
-                           required
-                         />
+
+                        <CustomInputField
+                          id="fullname"
+                          name="fullname"
+                          type="text"
+                          status= {addNewFullname.status}
+                          defaultValue={addNewFullname.value}
+                          value={addNewFullname.value}
+                          isRequired={true}
+                          statusMessage= {addNewFullname.statusMessage}
+                          title="Full Name"
+                          placeHolder="Enter your full name here"
+                          onChange={(event) => {
+                            if(event.target.value === ""){
+                              setAddNewFullname((addNewFullname) => addNewFullname = {value : event.target.value, status: "error", statusMessage :"Fullname is required"})
+                            }else{
+                              setAddNewFullname((addNewFullname) => addNewFullname = {value : event.target.value,status: "normal", statusMessage: ""})
+                            }
+
+                          }
+                            }
+                        />
+
                        </div>
                        <div>
-                         <label
-                           htmlFor="email"
-                           className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                         >
-                           Email
-                         </label>
-                         <input
-                           type="email"
-                           name="email"
-                           id="email"
-                           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500  text-white"
-                           placeholder={"Enter your email here"}
-                           value ={email}
-                           required
-                           onChange={(event) => {
-                             setEmail(event.target.value)
-                           }}
-                         />
+                       <CustomInputField
+                          id="email"
+                          name="email"
+                          type="email"
+                          status= {addNewEmail.status}
+                          defaultValue={addNewEmail.value}
+                          value={addNewEmail.value}
+                          isRequired={true}
+                          statusMessage= {addNewEmail.statusMessage}
+                          title="Email"
+                          placeHolder="Enter your email here"
+                          onChange={(event) => {
+                            if(event.target.value === "" ){
+                              setAddNewEmail((addNewEmail) => addNewEmail = {value : event.target.value, status: "error", statusMessage :"Email is required"})
+                            }else if(ValidateComplexEmail(event.target.value) === false){
+                              setAddNewEmail((addNewEmail) => addNewEmail = {value : event.target.value, status: "error", statusMessage :"Email is not valid"})
+                            }else{
+                              setAddNewEmail((addNewEmail) => addNewEmail = {value : event.target.value,status: "normal", statusMessage: ""})
+                            }
+
+                          }
+                            }
+                        />
                        </div>
 
                        <div>
-                         <label
-                           htmlFor="password"
-                           className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                         >
-                           Password
-                         </label>
-                         <input
-                           type="password"
-                           name="password"
-                           id="password"
-                           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500  text-white"
-                           placeholder={"Enter your password here"}
-                           value ={password}
-                           required
-                           onChange={(event) => {
-                             setPassword(event.target.value)
-                           }}
-                         />
+                       <CustomInputField
+                          id="password"
+                          name="password"
+                          type="password"
+                          status= {addNewPassword.status}
+                          defaultValue={addNewPassword.value}
+                          value={addNewPassword.value}
+                          isRequired={true}
+                          statusMessage= {addNewPassword.statusMessage}
+                          title="Password"
+                          placeHolder="Enter your password here"
+                          onChange={(event) => {
+                            if(event.target.value === ""){
+                              setAddNewPassword((addNewPassword) => addNewPassword = {value : event.target.value, status: "error", statusMessage :"Password is required"})
+                            }else{
+                              setAddNewPassword((addNewPassword) => addNewPassword = {value : event.target.value,status: "normal", statusMessage: ""})
+                            }
+
+                          }
+                            }
+                        />
                        </div>
  
                         
                         
                        <div>
-                         <label
-                           htmlFor="confirm_password"
-                           className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                         >
-                           Confirm Password
-                         </label>
-                         <input
-                           type="confirm_password"
-                           name="confirm_password"
-                           id="confirm_password"
-                           className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500  text-white"
-                           placeholder={"Confirm your password"}
-                           value ={confirmed_password}
-                           required
-                           onChange={(event) => {
-                             setConfirmedPassword(event.target.value)
-                           }}
-                         />
+                       <CustomInputField
+                          id="confirm_password"
+                          name="confirm_password"
+                          type="password"
+                          status= {addNewConfirmPassword.status}
+                          defaultValue={addNewConfirmPassword.value}
+                          value={addNewConfirmPassword.value}
+                          isRequired={true}
+                          statusMessage= {addNewConfirmPassword.statusMessage}
+                          title="Password"
+                          placeHolder="Confirm password here"
+                          onChange={(event) => {
+                            if(event.target.value === "" ){
+                              setAddNewConfirmPassword((addNewConfirmPassword) => addNewConfirmPassword = {value : event.target.value, status: "error", statusMessage :"Password is required"})
+                            }else if(event.target.value !== addNewPassword.value){
+                              setAddNewConfirmPassword((addNewConfirmPassword) => addNewConfirmPassword = {value : event.target.value, status: "error", statusMessage :"Password does not match"})
+                            }else{
+                              setAddNewConfirmPassword((addNewConfirmPassword) => addNewConfirmPassword = {value : event.target.value,status: "normal", statusMessage: ""})
+                            }
+
+                          }
+                            }
+                        />
                        </div>
 
                        <button
@@ -370,7 +432,7 @@ export default function ManageUser(){
                        <h3 className="mb-4 text-xl font-medium text-gray-900 dark:text-white">
                          Edit User
                        </h3>
-                       <form className="space-y-6" onSubmit ={handleSubmitEdit} >
+                       <form className="space-y-6">
                        <div>
                            <label
                              htmlFor="fullname"
@@ -384,7 +446,7 @@ export default function ManageUser(){
                              name="fullname"
                              id="fullname"
                              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500  text-white"
-                             placeholder={selectedUser.fullname}
+                             defaultValue={updatedFullname}
                              value ={updatedFullname}
                              onChange= {(event) => {setUpdatedFullname(event.target.value)}}
                              required
@@ -398,13 +460,12 @@ export default function ManageUser(){
                              Email
                            </label>
                            <input
-                         
                              disabled ={!isEdit}
                              type="email"
                              name="email"
                              id="email"
                              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500  text-white"
-                             placeholder={selectedUser.email}
+                             placeholder={updatedEmail}
                              value ={updatedEmail}
                              onChange={(event) => {
                                setUpdatedEmail(event.target.value)
@@ -414,12 +475,13 @@ export default function ManageUser(){
                          </div>
    
                        {isEdit ? ( <button
-                           type ="submit"
+                           type ="button" onClick = {handleSubmitEdit}
                            className="w-full text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800"
                          >
                            Save
                          </button>) : (
                             <button
+                            type ="button"
                             onClick={() =>{setIsEdit(true)}}
                             className="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
                           >

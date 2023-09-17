@@ -4,7 +4,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 
-export function Login() : JSX.Element{
+export default function Login() : JSX.Element{
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -20,8 +20,8 @@ export function Login() : JSX.Element{
             console.log(password)
             
             const data = {"email" : email, "hashed_password" : password}
-    
-            const request = await fetch("http://localhost:3000/api/login",{
+            
+            const request = await fetch(import.meta.env.VITE_SERVER_URL+"/login",{
                credentials: 'include', 
                 method: 'POST',
                 headers: { 'Content-Type' : 'application/json'},
@@ -32,7 +32,7 @@ export function Login() : JSX.Element{
             const response = await request.json();
             console.log("Response : ",response)
             if(response.responseStatus === 200){
-                 navigate('/dashboard')
+                 navigate('/users')
                 //Test();
             }else{
                 toast("Wrong Email or Password")
@@ -53,12 +53,14 @@ export function Login() : JSX.Element{
     const handleChangePassword = (event :  React.ChangeEvent<HTMLInputElement> )=>{
         setPassword(event.target.value);
     }
+
+  
     return(
         <>
         <section className="bg-gray-50 dark:bg-gray-900">
         <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
             <a href="#" className="flex items-center mb-6 text-2xl font-semibold text-gray-900 dark:text-white">
-                Dashboard Test
+                Test
             </a>
             <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
                 <div className="p-6 space-y-4 md:space-y-6 sm:p-8">

@@ -1,8 +1,8 @@
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import  { ReactNode, useEffect } from 'react';
+import  { ReactNode, useEffect, useState } from 'react';
 
 
 interface NavBarProps {
@@ -11,12 +11,14 @@ interface NavBarProps {
 export function NavBar({ children } : NavBarProps){
 
   const navigate = useNavigate();
-  
+  const location = useLocation();
+  const [activePage, setActivePage] = useState<string>("");
+
     async function Check(){
 
         try{
 
-            const request = await fetch("http://localhost:3000/api/check-auth",
+            const request = await fetch(import.meta.env.VITE_SERVER_URL+"/check-auth",
             {
               method: 'GET', // or other HTTP methods
               credentials: 'include', // Include cookies
@@ -63,11 +65,12 @@ export function NavBar({ children } : NavBarProps){
   }
  }
 
- const NavBarPages = [{
-  id: 1,
-  pageName: "Dashboard",
-  url: "/dashboard",
-},
+ const NavBarPages = [
+//   {
+//   id: 1,
+//   pageName: "Dashboard",
+//   url: "/dashboard",
+// },
 {
   id: 2,
   pageName: "Manage users",
@@ -75,7 +78,10 @@ export function NavBar({ children } : NavBarProps){
 }]
 
  
-
+ useEffect(() => {
+    // Get the pathname from the location object and set it as the activePage
+    setActivePage(location.pathname);
+  }, [location.pathname]);
 
     return(
         <>
@@ -90,7 +96,7 @@ export function NavBar({ children } : NavBarProps){
             </svg>
          </button>
         <a href="https://flowbite.com" className="flex ml-2 md:mr-24">
-           <span className="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white">Dashboard Test</span>
+           <span className="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white">Test</span>
         </a>
       </div>
       <div className="flex items-center">
@@ -138,7 +144,7 @@ export function NavBar({ children } : NavBarProps){
         {NavBarPages.map((page) =>{
           return(
             <li>
-            <a onClick ={() => navigate(page.url)}className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+            <a onClick ={() => navigate(page.url)}className={`flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group ${activePage === page.url ? 'border-4 border-blue-500' : ''}`}>
                <svg className="w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 22 21">
                   <path d="M16.975 11H10V4.025a1 1 0 0 0-1.066-.998 8.5 8.5 0 1 0 9.039 9.039.999.999 0 0 0-1-1.066h.002Z"/>
                   <path d="M12.5 0c-.157 0-.311.01-.565.027A1 1 0 0 0 11 1.02V10h8.975a1 1 0 0 0 1-.935c.013-.188.028-.374.028-.565A8.51 8.51 0 0 0 12.5 0Z"/>
